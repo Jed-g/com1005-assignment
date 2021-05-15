@@ -39,9 +39,25 @@ public class RamblersState extends SearchState {
 
         Coords goalCoords = msearcher.getGoalCoords();
 
-        // euclidean distance for now...
-        return (int) Math.round(Math.sqrt((goalCoords.getx() - coords.getx()) * (goalCoords.getx() - coords.getx())
-                + (goalCoords.gety() - coords.gety()) * (goalCoords.gety() - coords.gety())));
+        int estimatedRemainingCost = 0;
+
+        // all estimates will always be underestimates
+        if (estimationMethod.equals("euclidean")) {
+            estimatedRemainingCost = (int) Math.round(Math.sqrt((goalCoords.getx() - coords.getx()) * (goalCoords.getx() - coords.getx())
+                    + (goalCoords.gety() - coords.gety()) * (goalCoords.gety() - coords.gety())));
+        } else if (estimationMethod.equals("heightDiff")) {
+            estimatedRemainingCost = map.getTmap()[goalCoords.gety()][goalCoords.getx()] - map.getTmap()[coords.gety()][coords.getx()];
+        } else if (estimationMethod.equals("superAdvanced")) {
+            int heightDiff = map.getTmap()[goalCoords.gety()][goalCoords.getx()] - map.getTmap()[coords.gety()][coords.getx()];
+            int manhattanDistance = Math.abs(goalCoords.getx() - coords.getx()) + Math.abs(goalCoords.gety() - coords.gety());
+            int heightDiffELU = heightDiff >= 0 ? heightDiff : (int) Math.round(Math.exp(heightDiff) - 1);
+
+            estimatedRemainingCost = manhattanDistance + heightDiffELU;
+        } else {
+            // manhattan
+            estimatedRemainingCost = Math.abs(goalCoords.getx() - coords.getx()) + Math.abs(goalCoords.gety() - coords.gety());
+        }
+        return estimatedRemainingCost;
     }
 
     // getSuccessors
